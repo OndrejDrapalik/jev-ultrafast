@@ -10,6 +10,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from .agent import Agent
+from .browser import StalePage
 from .questions import MAX_STEPS
 
 ROOT = Path(__file__).parent
@@ -63,7 +64,10 @@ def command(name, body):
     else:
         if AGENT is None:
             raise ValueError("Start a demo first")
-        AGENT.command(name, body)
+        if name == "show_browser":
+            AGENT.browser.show()
+        else:
+            AGENT.command(name, body)
     return response_state()
 
 
@@ -117,6 +121,8 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length))
             result = command(self.path.removeprefix("/api/"), body)
             self.send(200, json.dumps(result))
+        except StalePage as error:
+            self.send(409, json.dumps({"error": str(error), "stale": True}))
         except (ValueError, RuntimeError, TimeoutError) as error:
             self.send(400, json.dumps({"error": str(error)}))
         except Exception:

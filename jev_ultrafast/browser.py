@@ -106,9 +106,22 @@ class Browser:
         self.after_input = action if action["kind"] != "wait" else None
         return result
 
+    def show(self):
+        """Bring this agent's owned tab forward for a visible demo."""
+        try:
+            cdp("Target.activateTarget", targetId=self.target)
+        except RuntimeError as error:
+            if "No target with given id found" not in str(error):
+                raise
+            raise ValueError("The browser tab was closed. Click Start demo to open a fresh one.") from None
+
     def close(self):
         if self.target:
-            cdp("Target.closeTarget", targetId=self.target)
+            try:
+                cdp("Target.closeTarget", targetId=self.target)
+            except RuntimeError as error:
+                if "No target with given id found" not in str(error):
+                    raise
             self.target = None
 
 

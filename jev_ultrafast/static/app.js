@@ -25,7 +25,7 @@ async function call(name, body = {}) {
     body: JSON.stringify(body),
   });
   const data = await response.json();
-  if (!response.ok) throw Error(data.error || "Request failed");
+  if (!response.ok) throw Object.assign(Error(data.error || "Request failed"), {stale: data.stale === true});
   state = data;
   render();
   return data;
@@ -170,13 +170,20 @@ $("auto").addEventListener("click", () =>
   perform(async () => {
     automatic = true;
     controls();
+    if ($("show-browser").checked) await call("show_browser");
     for (let i = 0; i < state.max_steps * 2 && automatic; i++) {
       $("status").textContent = "Running…";
       if ($("pace").checked) {
         await call("predict");
         await new Promise(resolve => setTimeout(resolve, 450));
         if (!automatic) break;
-        await call("act", {fingerprint: state.page.fingerprint});
+        try {
+          await call("act", {fingerprint: state.page.fingerprint});
+        } catch (error) {
+          if (!error.stale) throw error;
+          // The executor rejected stale input. Predict again from the current page.
+          continue;
+        }
       } else {
         await call("tick");
       }
@@ -237,6 +244,8 @@ fetch("/api/state")
   .then((r) => r.json())
   .then((s) => {
     state = s;
+    if (s.scenario) $("scenario").value = s.scenario;
+    if (s.goal) $("goal").value = s.goal;
     render();
   })
   .catch(() => {
