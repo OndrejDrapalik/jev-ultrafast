@@ -48,6 +48,38 @@ There are no site-specific action scripts or prepared field strings in the polic
 
 ## Try it
 
+### This checkout: Comet / drew-e2b
+
+This checkout connects to your existing Comet profile over CDP on port **9333**.
+Browser Harness remains the local CDP transport; no Browser Use cloud browser or
+Browser Use API key is needed.
+
+```bash
+cd ~/_wt/playground/feat-jev-browser-use
+uv sync
+# Fill the existing .env: TYPESAFE_API_KEY and TEXT_MODEL_API_KEY (OpenRouter).
+./scripts/start-comet.sh
+```
+
+Open **http://127.0.0.1:8766**. The launcher uses the `od-ab-e2b` skill's
+`connect-e2b.sh` to connect or cold-launch Comet, preserves your app focus, and
+uses a dedicated `jev-comet` harness session. If Comet is already running without
+CDP, the launcher stops so you can approve a relaunch. Agent runs create their
+own background tabs in your signed-in profile and close only those tabs.
+
+To watch a run, click **Start demo**, then **Run automatically**. **Show live
+browser** brings the agent's tab forward when the run begins. **Slow motion**
+adds a short pause before each action. Both options start checked; uncheck
+**Show live browser** to stay on the inspector and watch its screenshot updates.
+
+After editing `.env`, restart the server to load your keys. To run scripts against
+the same browser, use `uv run --env-file .env python scripts/check_guards.py`
+(no model calls) or `uv run --env-file .env python scripts/smoke.py` (paid model
+calls; requires the local server). The original playground worktree was preserved
+at `~/_wt/playground/feat-jev-browser-use-playground-backup`.
+
+### Upstream setup
+
 ```bash
 git clone https://github.com/browser-use/jev-ultrafast.git
 cd jev-ultrafast
